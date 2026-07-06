@@ -1,0 +1,199 @@
+body {
+    font-family: Arial;
+    background: #f2f6ff;
+    margin: 0;
+}
+
+.header {
+    background: #007BFF;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+}
+
+.container-wide {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow-x: auto;
+    display: block;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    background: #007BFF;
+    color: white;
+}
+
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+}
+
+.btn-primary { background: #007BFF; }
+.btn-success { background: #28a745; }
+.btn-danger { background: red; }
+.btn-dark { background: #343a40; }
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.inline-form {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+.inline-form input {
+    width: 100px;
+    margin: 0;
+    padding: 4px;
+}
+
+button { margin-top: 5px; }
+
+.login-btn {
+    background-color: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.back-btn {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: #007bff;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+/* Utilization bar (Phase 4) */
+.util-bar {
+    background: #e9ecef;
+    border-radius: 6px;
+    height: 10px;
+    width: 100%;
+    overflow: hidden;
+}
+.util-fill {
+    background: #28a745;
+    height: 100%;
+}
+
+/* Status summary cards (Phase 7 - dashboard improvement) */
+.status-cards {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.status-card {
+    flex: 1;
+    min-width: 100px;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.status-count {
+    font-size: 22px;
+    font-weight: bold;
+}
+.status-pending { background: #f0ad4e; }
+.status-approved { background: #28a745; }
+.status-rejected { background: #d9534f; }
+.status-completed { background: #007BFF; }
+
+/* Reminder banner (Phase 8) */
+.reminder-banner {
+    background: #fff3cd;
+    border-left: 5px solid #f0ad4e;
+}
+
+/* Receipt chips */
+.receipt-chip {
+    font-size: 13px;
+    margin-bottom: 6px;
+    text-align: left;
+}
+
+/* Charts (Phase 9) */
+.chart-row {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.chart-box {
+    position: relative;
+    width: 320px;
+    height: 260px;
+}
+
+/* Responsive design (Phase 12) */
+@media (max-width: 768px) {
+    .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    table { font-size: 12px; }
+    .chart-box { width: 100%; max-width: 320px; }
+}

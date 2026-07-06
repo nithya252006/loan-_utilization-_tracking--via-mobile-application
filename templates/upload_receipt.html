@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Receipt</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <h2>📎 Upload Receipt</h2>
+    <a class="btn btn-danger" href="/logout">Logout</a>
+</div>
+
+<div class="container">
+    <div class="card" style="width:420px; margin:auto;">
+
+        <h3>Loan #{{ loan.id }} — ₹{{ loan.amount }} ({{ loan.purpose }})</h3>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for m in messages %}<p style="color:red;">{{ m }}</p>{% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <label>Amount Spent</label>
+            <input type="number" step="0.01" min="1" name="amount" placeholder="Amount used" required>
+
+            <label>Category</label>
+            <select name="category" required>
+                <option value="" disabled selected>Select receipt category</option>
+                {% for p in purposes %}
+                <option value="{{ p }}">{{ p }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Receipt File (PNG, JPG, JPEG, PDF — max 5MB)</label>
+            <input type="file" name="receipt" accept=".png,.jpg,.jpeg,.pdf" required>
+
+            <button class="btn btn-success" type="submit">Upload</button>
+        </form>
+
+        <a class="btn btn-primary" href="{{ url_for('dashboard') }}">⬅ Back</a>
+
+    </div>
+</div>
+
+</body>
+</html>

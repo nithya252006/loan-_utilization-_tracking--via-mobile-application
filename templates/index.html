@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <h2>Loan Utilization System</h2>
+</div>
+
+<div class="container">
+    <div class="card" style="text-align:center; max-width:500px;">
+        <h1>Loan Utilization System 🚀</h1>
+        <p>Track loan usage, upload proof of spend, and get officer verification —
+           all in one place.</p>
+
+        <a class="btn btn-primary" href="{{ url_for('login') }}">Customer Login</a>
+        <a class="btn btn-success" href="{{ url_for('register') }}">Register</a>
+        <br><br>
+        <a class="btn btn-dark" href="{{ url_for('officer_login') }}">Officer Login</a>
+    </div>
+</div>
+
+</body>
+</html>

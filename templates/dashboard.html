@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+    <h2>Loan Dashboard 💰</h2>
+    <div>
+        <span>Welcome {{ user }} 👋</span>
+        <a href="/loan" class="btn btn-success">➕ Add Loan</a>
+        <a href="/logout" class="btn btn-danger">Logout 🚪</a>
+    </div>
+</div>
+
+<div class="container-wide">
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="card">
+          {% for m in messages %}<p style="color:#007BFF; margin:4px 0;">{{ m }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% for loan in loans if loan.reminder %}
+      <div class="card reminder-banner">
+        ⏰ <strong>{{ loan.reminder }}:</strong> Loan #{{ loan.id }} ({{ loan.purpose }}) is still
+        Pending — please follow up.
+      </div>
+    {% endfor %}
+
+    <div class="card">
+        <h3>📊 Dashboard Summary</h3>
+        <p><strong>Total Loans:</strong> {{ total_loans }}</p>
+        <p><strong>Total Loan Amount:</strong> ₹{{ "%.2f"|format(total_amount) }}</p>
+        <p><strong>Total Used:</strong> ₹{{ "%.2f"|format(total_used) }}</p>
+        <p><strong>Total Remaining:</strong> ₹{{ "%.2f"|format(total_remaining) }}</p>
+
+        <div class="status-cards">
+            <div class="status-card status-pending">
+                <span class="status-count">{{ pending_count }}</span>
+                <span>🟡 Pending</span>
+            </div>
+            <div class="status-card status-approved">
+                <span class="status-count">{{ approved_count }}</span>
+                <span>🟢 Approved</span>
+            </div>
+            <div class="status-card status-rejected">
+                <span class="status-count">{{ rejected_count }}</span>
+                <span>🔴 Rejected</span>
+            </div>
+            <div class="status-card status-completed">
+                <span class="status-count">{{ completed_count }}</span>
+                <span>🔵 Completed</span>
+            </div>
+        </div>
+
+        <div>
+            <a class="btn btn-primary" href="{{ url_for('export_pdf') }}">📄 Export PDF</a>
+            <a class="btn btn-primary" href="{{ url_for('export_excel') }}">📊 Export Excel</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>📈 Overview Charts</h3>
+        <div class="chart-row">
+            <div class="chart-box">
+                <canvas id="utilChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Your Loans</h3>
+
+        <form method="GET" action="/dashboard" style="margin-bottom:20px;">
+            <input type="text" name="search" placeholder="🔍 Search by purpose..." value="{{ search if search else '' }}">
+            <button class="btn btn-primary" type="submit">🔍 Search</button>
+        </form>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Purpose</th>
+                <th>Loan Date</th>
+                <th>Status</th>
+                <th>Utilization</th>
+                <th>Receipts</th>
+                <th>Action</th>
+            </tr>
+
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.id }}</td>
+                <td>₹{{ "%.2f"|format(loan.amount) }}</td>
+                <td>{{ loan.purpose }}</td>
+                <td>{{ loan.loan_date.strftime('%d-%m-%Y') if loan.loan_date else '' }}</td>
+                <td>
+                    {% if loan.status == "Pending" %}🟡 Pending
+                    {% elif loan.status == "Approved" %}🟢 Approved
+                    {% elif loan.status == "Rejected" %}🔴 Rejected
+                    {% elif loan.status == "Completed" %}🔵 Completed
+                    {% endif %}
+                    {% if loan.remarks %}<br><small>{{ loan.remarks }}</small>{% endif %}
+                </td>
+                <td style="min-width:140px;">
+                    <div class="util-bar">
+                        <div class="util-fill" style="width:{{ loan.utilization_pct }}%;"></div>
+                    </div>
+                    <small>{{ loan.utilization_pct }}% used<br>
+                    ₹{{ "%.2f"|format(loan.remaining_amount) }} left</small>
+                </td>
+                <td>
+                    {% for r in loan.receipts %}
+                        <div class="receipt-chip">
+                            {% if r.file_path.endswith('.pdf') %}
+                                <a href="/{{ r.file_path }}" target="_blank">📄 PDF</a>
+                            {% else %}
+                                <a href="/{{ r.file_path }}" target="_blank">🖼️ Img</a>
+                            {% endif %}
+                            {% if r.status == 'Verified' %}✅
+                            {% elif r.status == 'Rejected' %}❌
+                            {% else %}⏳{% endif %}
+                            {% if r.needs_review %}<span title="Flagged for review">⚠️</span>{% endif %}
+                        </div>
+                    {% endfor %}
+                    <a class="btn btn-primary" style="margin-top:4px;" href="{{ url_for('upload_receipt', loan_id=loan.id) }}">➕ Upload</a>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        {% if loan.status == 'Pending' %}
+                        <a class="btn btn-primary" href="/edit_loan/{{ loan.id }}">✏️</a>
+                        {% endif %}
+                        <a class="btn btn-danger" href="/delete_loan/{{ loan.id }}" onclick="return confirm('Delete this loan?')">🗑</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+
+<script>
+const chartData = {{ chart_data | tojson }};
+
+new Chart(document.getElementById('utilChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Total Loan', 'Used', 'Remaining'],
+        datasets: [{
+            label: '₹ Amount',
+            data: [chartData.total_amount, chartData.total_used, chartData.total_remaining],
+            backgroundColor: ['#007BFF', '#28a745', '#f0ad4e']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'Loan Utilization (₹)' } }
+    }
+});
+
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Pending Loans', 'Verified Receipts'],
+        datasets: [{
+            data: [chartData.pending_count, chartData.verified_receipts],
+            backgroundColor: ['#f0ad4e', '#28a745']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: { title: { display: true, text: 'Status Overview' } }
+    }
+});
+</script>
+
+</body>
+</html>

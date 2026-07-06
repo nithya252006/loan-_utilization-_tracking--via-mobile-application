@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <div class="card" style="width:350px; margin:auto; margin-top:100px; text-align:center;">
+
+        <h2>Register</h2>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for m in messages %}<p style="color:red;">{{ m }}</p>{% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="username" placeholder="Username" required minlength="3">
+            <input type="password" name="password" placeholder="Password (min 6 chars)" required minlength="6">
+            <button class="btn btn-success" type="submit">Register</button>
+        </form>
+
+        <p>Already have account? <a href="{{ url_for('login') }}">Login</a></p>
+
+    </div>
+</div>
+
+</body>
+</html>

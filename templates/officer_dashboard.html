@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Officer Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <h2>🏦 Officer Portal</h2>
+    <div>
+        <span>{{ officer }} 👋</span>
+        <a href="/logout" class="btn btn-danger">Logout 🚪</a>
+    </div>
+</div>
+
+<div class="container-wide">
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="card">
+          {% for m in messages %}<p style="color:#007BFF; margin:4px 0;">{{ m }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <h3>Summary</h3>
+        <p><strong>Total Loans:</strong> {{ loans|length }}</p>
+        <p><strong>Pending Review:</strong> {{ pending_loans|length }}</p>
+        <p><strong>Flagged Receipts (Purpose Mismatch):</strong> {{ flagged_receipts|length }}</p>
+    </div>
+
+    {% if flagged_receipts %}
+    <div class="card reminder-banner">
+        <h3>⚠ Needs Officer Review</h3>
+        {% for r in flagged_receipts %}
+            <p>Receipt #{{ r.id }} — {{ r.username }} — {{ r.category }} (₹{{ r.amount }})
+               <a href="/{{ r.file_path }}" target="_blank">view</a></p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <h3>All Loans</h3>
+        <table>
+            <tr>
+                <th>ID</th><th>User</th><th>Amount</th><th>Purpose</th>
+                <th>Date</th><th>Status</th><th>Utilization</th><th>Receipts</th><th>Action</th>
+            </tr>
+            {% for loan in loans %}
+            <tr>
+                <td>{{ loan.id }}</td>
+                <td>{{ loan.username }}</td>
+                <td>₹{{ "%.2f"|format(loan.amount) }}</td>
+                <td>{{ loan.purpose }}</td>
+                <td>{{ loan.loan_date.strftime('%d-%m-%Y') if loan.loan_date else '' }}</td>
+                <td>
+                    {{ loan.status }}
+                    {% if loan.remarks %}<br><small>{{ loan.remarks }}</small>{% endif %}
+                </td>
+                <td>
+                    <div class="util-bar"><div class="util-fill" style="width:{{ loan.utilization_pct }}%;"></div></div>
+                    <small>{{ loan.utilization_pct }}%</small>
+                </td>
+                <td>
+                    {% for r in loan.receipts %}
+                        <div class="receipt-chip">
+                            <a href="/{{ r.file_path }}" target="_blank">{{ r.category }} ₹{{ r.amount }}</a>
+                            {% if r.needs_review %}⚠️{% endif %}
+                            {% if r.status == 'Pending' %}
+                            <form method="POST" action="{{ url_for('officer_update_receipt_status', receipt_id=r.id) }}" class="inline-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="text" name="remarks" placeholder="remarks" value="{{ r.remarks or '' }}">
+                                <button class="btn btn-success" name="status" value="Verified">✅</button>
+                                <button class="btn btn-danger" name="status" value="Rejected">❌</button>
+                            </form>
+                            {% else %}
+                            <br><small>✔ {{ r.status }}{% if r.remarks %} — {{ r.remarks }}{% endif %}</small>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <small>No receipts yet</small>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if loan.status == 'Pending' %}
+                    <form method="POST" action="{{ url_for('officer_update_loan_status', loan_id=loan.id) }}" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="remarks" placeholder="remarks" value="{{ loan.remarks or '' }}">
+                        <button class="btn btn-success" name="status" value="Approved">Approve</button>
+                        <button class="btn btn-danger" name="status" value="Rejected">Reject</button>
+                    </form>
+                    {% elif loan.status == 'Approved' %}
+                    <form method="POST" action="{{ url_for('officer_update_loan_status', loan_id=loan.id) }}" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="remarks" placeholder="remarks" value="{{ loan.remarks or '' }}">
+                        <button class="btn btn-primary" name="status" value="Completed">Mark Completed</button>
+                    </form>
+                    {% else %}
+                    <small>✔ Decision final — {{ loan.status }}</small>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

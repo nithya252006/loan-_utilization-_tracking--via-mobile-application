@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+static/uploads/receipts/*
+!static/uploads/receipts/.gitkeep
+.env
+*.log

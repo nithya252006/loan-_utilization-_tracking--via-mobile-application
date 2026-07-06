@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Something went wrong</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <div class="card" style="max-width:500px; text-align:center; margin-top:100px;">
+        <h2>⚠️ Something went wrong</h2>
+        <p>{{ message }}</p>
+        <p><small>If this keeps happening, make sure MySQL is running and the
+           password in your environment variable is correct.</small></p>
+        <a class="btn btn-primary" href="{{ url_for('home') }}">⬅ Back to Home</a>
+    </div>
+</div>
+
+</body>
+</html>
