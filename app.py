@@ -17,10 +17,6 @@ from reports import build_pdf_report, build_excel_report
 # APP CONFIG
 # ============================================================
 app = Flask(__name__)
-# Secret key: reads from an environment variable if set, otherwise generates
-# a random one at startup. A random fallback is safer than a hardcoded string,
-# but note that sessions will be invalidated every time the app restarts
-# unless LOAN_APP_SECRET is set explicitly.
 app.secret_key = os.environ.get("LOAN_APP_SECRET") or os.urandom(24).hex()
 
 app.config["UPLOAD_FOLDER"] = os.path.join("static", "uploads", "receipts")
@@ -34,9 +30,6 @@ csrf = CSRFProtect(app)
 # ============================================================
 # LOAN PURPOSES (Phase 7 - Purpose Validation)
 # ============================================================
-# This is the single source of truth for loan purposes AND receipt
-# categories. Using the exact same list for both means a receipt either
-# matches the loan's purpose exactly, or it doesn't - no guessing needed.
 LOAN_PURPOSES = [
     "Education",
     "Medical",
@@ -61,24 +54,28 @@ REMINDER_THRESHOLDS = [
 # ============================================================
 # DATABASE HELPER
 # ============================================================
-# MySQL password is read from an environment variable so it's never
-# committed to code. Set it before running the app, e.g. in PowerShell:
-#   $env:MYSQL_PASSWORD="your_real_password"
-# Falls back to a placeholder so the app still tells you clearly what's
-# missing instead of silently using the wrong password.
+MYSQL_HOST = os.environ.get("MYSQL_HOST", "localhost")
+MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
+MYSQL_USER = os.environ.get("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "nila252006")
+MYSQL_DB = os.environ.get("MYSQL_DB", "loan_db")
+MYSQL_SSL = os.environ.get("MYSQL_SSL", "false").lower() == "true"
 
 
 def get_db():
     """Opens a MySQL connection. Raises a clear error if the DB is unreachable
     so routes can catch it and show a friendly message instead of crashing."""
     try:
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password=MYSQL_PASSWORD,
-            database="loan_db",
-        )
+        connect_args = {
+            "host": MYSQL_HOST,
+            "port": MYSQL_PORT,
+            "user": MYSQL_USER,
+            "password": MYSQL_PASSWORD,
+            "database": MYSQL_DB,
+        }
+        if MYSQL_SSL:
+            connect_args["ssl_disabled"] = False
+        return mysql.connector.connect(**connect_args)
     except mysql.connector.Error as err:
         raise RuntimeError(f"Database connection failed: {err}") from err
 
@@ -134,8 +131,6 @@ def home():
 # ============================================================
 @app.errorhandler(RuntimeError)
 def handle_db_error(e):
-    """Catches DB connection failures raised from get_db() so the user sees
-    a friendly page instead of Flask's raw 'Internal Server Error'."""
     return render_template("error.html", message=str(e)), 500
 
 
@@ -241,7 +236,6 @@ def logout():
 # UTILIZATION HELPERS (Phase 4)
 # ============================================================
 def attach_utilization(cursor, loan):
-    """Adds used_amount / remaining_amount / utilization_pct / reminder to a loan dict."""
     cursor.execute(
         "SELECT COALESCE(SUM(amount), 0) AS used FROM receipts "
         "WHERE loan_id=%s AND status='Verified'",
@@ -387,7 +381,6 @@ def edit_loan(loan_id):
         conn.close()
         abort(404)
 
-    # Only Pending loans can be edited once an officer has started reviewing it
     if request.method == "POST":
         if loan["status"] != "Pending":
             flash("This loan has already been reviewed and can no longer be edited.")
@@ -496,9 +489,6 @@ def upload_receipt(loan_id):
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
 
-        # Phase 7: flag if the receipt's category doesn't exactly match the
-        # loan's purpose - both come from the same LOAN_PURPOSES list, so
-        # this is an exact comparison, not a guess.
         needs_review = 1 if category != loan["purpose"] else 0
 
         cursor.execute(
