@@ -9,6 +9,12 @@ how much of each loan has actually been utilized.
 > (including mobile browsers, thanks to a responsive layout) — not a
 > native/installable mobile app.
 
+## 🔗 Live Demo
+[https://loan-utilization-tracking-via-mobile-g9zu.onrender.com](https://loan-utilization-tracking-via-mobile-g9zu.onrender.com)
+
+> ⚠️ Hosted on free-tier services (Render + Aiven). If it's been idle a
+> while, the first load may take up to a minute to wake up.
+
 ## ✨ Features
 
 - 🔐 Customer registration/login with hashed passwords
@@ -28,7 +34,8 @@ how much of each loan has actually been utilized.
 |---|---|
 | Frontend | HTML5, CSS3, JavaScript (Chart.js) |
 | Backend | Python (Flask) |
-| Database | MySQL |
+| Database | MySQL (Aiven, managed cloud instance) |
+| Hosting | Render |
 | Security | Werkzeug password hashing, Flask-WTF (CSRF) |
 | Reporting | ReportLab (PDF), openpyxl (Excel) |
 
@@ -92,6 +99,14 @@ how much of each loan has actually been utilized.
    python app.py
    ```
    Visit `http://127.0.0.1:5000`
+
+## ☁️ Deployment
+
+Deployed on **Render**, using **Aiven** for a free managed MySQL database.
+Configuration is entirely environment-variable driven (`MYSQL_HOST`,
+`MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB`, `MYSQL_SSL`,
+`LOAN_APP_SECRET`), so the same codebase runs locally against a local
+MySQL instance or in production against Aiven, with no code changes.
 
 ## 📚 Documentation
 
